@@ -13,11 +13,18 @@
       <script src="js/tree.js"></script>
       <script src="js/camera.js"></script>
       <script>
+         const showTopCanvas = false;
+
          topCanvas.width = window.innerWidth/2;
          topCanvas.height = window.innerHeight;
 
          cameraCanvas.width = window.innerWidth/2;
          cameraCanvas.height = window.innerHeight;
+
+         if(!showTopCanvas){
+            topCanvas.width=0;
+            cameraCanvas.width=window.innerWidth;
+         }
 
          const game = new Game(topCanvas, cameraCanvas);
          game.start();
