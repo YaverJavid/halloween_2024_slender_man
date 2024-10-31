@@ -9,10 +9,17 @@ class Game {
       };
 
       this.player = new Player(center);
+
    }
 
-   update() {
-      const { ctx, canvas } = this;
-      this.player.draw(ctx);
+   start() {
+      this.animate();
+   }
+
+   animate() {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.player.update();
+      this.player.draw(this.ctx);
+      requestAnimationFrame(() => this.animate());
    }
 }
