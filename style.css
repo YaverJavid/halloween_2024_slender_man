@@ -2,6 +2,9 @@ body{
    margin: 0;
    overflow: hidden;
 }
-canvas {
+#topCanvas {
    background-color: #000;
+}
+#cameraCanvas {
+   background-color: gray;
 }
