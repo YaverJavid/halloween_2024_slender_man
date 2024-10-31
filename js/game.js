@@ -12,7 +12,7 @@ class Game {
       };
 
       this.player = new Player(center);
-      this.camera= new Camera(center, this.player);
+      this.camera = new Camera(center, this.player);
 
       const areaSize = 1000;
       const bounds = {
@@ -25,43 +25,58 @@ class Game {
 
       const minDistance = 200;
       const locations = this.#generateItems(treeMaxCount, bounds, minDistance);
-      const slenderManLocation=locations.pop();
+      const slenderManLocation = locations.pop();
       this.trees = locations.map((center) => new Tree(center));
-      this.slenderMan=new SlenderMan(slenderManLocation);
+      this.slenderMan = new SlenderMan(slenderManLocation);
    }
 
    start() {
       this.#animate();
    }
 
-   #update(){
+   #update() {
       this.player.update();
       return this.camera.update();
    }
 
-   #draw(){
+   #draw() {
       this.topCtx.clearRect(0, 0, this.topCanvas.width, this.topCanvas.height);
-      this.cameraCtx.clearRect(0, 0, this.cameraCanvas.width, this.cameraCanvas.height);
-      
+      this.cameraCtx.clearRect(
+         0,
+         0,
+         this.cameraCanvas.width,
+         this.cameraCanvas.height
+      );
+
       this.trees.forEach((tree) => tree.draw(this.topCtx));
       this.slenderMan.draw(this.topCtx);
 
       this.player.draw(this.topCtx);
       this.camera.draw(this.topCtx);
-       }
+   }
 
    #render(fov) {
       const centers = this.trees.map((t) => t.center);
       const inView = centers.filter((c) => pointInTriangle(c, fov));
-      const slenderManInView=pointInTriangle(this.slenderMan.center, fov);
-      const slenderMan=slenderManInView?this.slenderMan:null;
+      const slenderManInView = pointInTriangle(this.slenderMan.center, fov);
+      const slenderMan = slenderManInView ? this.slenderMan : null;
       this.camera.render(this.cameraCtx, inView, slenderMan);
+      if (slenderManInView) {
+         if (distance(this.player.center, this.slenderMan.center) < 200) {
+            return true;
+         }
+      }
+      return false;
    }
 
    #animate() {
       const fov = this.#update();
       this.#draw();
-      this.#render(fov);
+      const gameOver = this.#render(fov);
+      if (gameOver) {
+         this.cameraCanvas.style.filter="sepia(1) saturate(5) hue-rotate(307deg)";
+         return;
+      }
       requestAnimationFrame(() => this.#animate());
    }
 
@@ -72,7 +87,9 @@ class Game {
             x: lerp(bounds.left, bounds.right, Math.random()),
             y: lerp(bounds.top, bounds.bottom, Math.random()),
          };
-         const nearbyItem = locations.find((loc) => distance(center, loc) < minDistance);
+         const nearbyItem = locations.find(
+            (loc) => distance(center, loc) < minDistance
+         );
          if (!nearbyItem) {
             locations.push(center);
          }
