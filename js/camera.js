@@ -27,7 +27,7 @@ class Camera {
       return [this.left, this.center, this.right];
    }
 
-   #projectPoint(p, seg, {width,height}) {
+   #projectPoint(p, seg, { width, height }) {
       const p1 = projectPoint(p, seg);
       const c = Vector.cross(
          Vector.subtract(p1, this.center),
@@ -43,16 +43,37 @@ class Camera {
       return { x: scaledX, y: scaledY };
    }
 
-   render(ctx, points) {
-      points.sort((a, b) => distance(this.center, b) - distance(this.center, a));
+   render(ctx, points, slenderMan) {
+      const items = points.map((p) => ({
+         point: p,
+         dist: distance(this.center, p),
+         type: "tree",
+      }));
+      if (slenderMan) {
+         items.push({
+            point: slenderMan.center,
+            dist: distance(this.center, slenderMan.center),
+            type: "slenderMan",
+         });
+      }
+      items.sort((a, b) => b.dist - a.dist);
 
       const seg = [this.center, this.front];
-      const projections=points.map(p=>this.#projectPoint(p, seg, ctx.canvas));
+      const projections = items.map((p) => {
+         return {
+            point: this.#projectPoint(p.point, seg, ctx.canvas),
+            dist: p.dist,
+            type: p.type,
+         };
+      });
 
-      for(let i=0;i<points.length;i++){
-         const proj=projections[i];
-         const dist=distance(this.center,points[i]);
-         Tree.render(ctx, proj, dist);
+      for (let i = 0; i < projections.length; i++) {
+         const proj = projections[i];
+         if (proj.type === "tree") {
+            Tree.render(ctx, proj.point, proj.dist);
+         } else {
+            SlenderMan.render(ctx, proj.point, proj.dist);
+         }
       }
    }
    draw(ctx) {

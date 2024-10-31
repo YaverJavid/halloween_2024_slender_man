@@ -14,7 +14,7 @@ class Game {
       this.player = new Player(center);
       this.camera= new Camera(center, this.player);
 
-      const areaSize = 10000;
+      const areaSize = 1000;
       const bounds = {
          top: center.y - areaSize / 2,
          right: center.x + areaSize / 2,
@@ -24,7 +24,10 @@ class Game {
       const treeMaxCount = 10000;
 
       const minDistance = 200;
-      this.trees = this.#generateTrees(treeMaxCount, bounds, minDistance);
+      const locations = this.#generateItems(treeMaxCount, bounds, minDistance);
+      const slenderManLocation=locations.pop();
+      this.trees = locations.map((center) => new Tree(center));
+      this.slenderMan=new SlenderMan(slenderManLocation);
    }
 
    start() {
@@ -39,16 +42,20 @@ class Game {
    #draw(){
       this.topCtx.clearRect(0, 0, this.topCanvas.width, this.topCanvas.height);
       this.cameraCtx.clearRect(0, 0, this.cameraCanvas.width, this.cameraCanvas.height);
+      
+      this.trees.forEach((tree) => tree.draw(this.topCtx));
+      this.slenderMan.draw(this.topCtx);
 
       this.player.draw(this.topCtx);
       this.camera.draw(this.topCtx);
-      this.trees.forEach((tree) => tree.draw(this.topCtx));
-   }
+       }
 
    #render(fov) {
       const centers = this.trees.map((t) => t.center);
       const inView = centers.filter((c) => pointInTriangle(c, fov));
-      this.camera.render(this.cameraCtx, inView);
+      const slenderManInView=pointInTriangle(this.slenderMan.center, fov);
+      const slenderMan=slenderManInView?this.slenderMan:null;
+      this.camera.render(this.cameraCtx, inView, slenderMan);
    }
 
    #animate() {
@@ -58,20 +65,18 @@ class Game {
       requestAnimationFrame(() => this.#animate());
    }
 
-   #generateTrees(tries, bounds, minDistance) {
-      const trees = [];
+   #generateItems(tries, bounds, minDistance) {
+      const locations = [];
       for (let i = 0; i < tries; i++) {
          const center = {
             x: lerp(bounds.left, bounds.right, Math.random()),
             y: lerp(bounds.top, bounds.bottom, Math.random()),
          };
-         const centers = trees.map((tree) => tree.center);
-         centers.push(this.player.center);
-         const nearbyItem = centers.find((loc) => distance(center, loc) < minDistance);
+         const nearbyItem = locations.find((loc) => distance(center, loc) < minDistance);
          if (!nearbyItem) {
-            trees.push(new Tree(center));
+            locations.push(center);
          }
       }
-      return trees;
+      return locations;
    }
 }
